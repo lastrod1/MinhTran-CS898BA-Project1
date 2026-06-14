@@ -3,6 +3,7 @@
 ## Setup
 
 - setup venv with requirements from the main readme in the base directory
+- make directory for Part2_Pictues and Part3_pictures
 
 ## Code Explanation
 
