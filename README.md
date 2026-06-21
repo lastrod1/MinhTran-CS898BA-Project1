@@ -6,3 +6,4 @@
 2. installed opencv on the virtual environment with ```pip install opencv-python```. Will be using same environment for HWs as well.
    1. installed following packages: numpy, scipy, matplotlib
    2. included a requirements.txt
+3. 
