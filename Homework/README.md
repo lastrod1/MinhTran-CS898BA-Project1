@@ -77,3 +77,29 @@ I just typed in plot and held down the down arrow and randomly stopped
 ![4th random](./Part3_Pictures/blurred15_sigma0.5_affine_plot.png)
 ![5th random](./Part3_Pictures/affine14_plot.png)
 ![6th random](./Part3_Pictures/blurred20_sigma2.0_affine_plot.png)
+
+# Part for HW2
+
+### Part 2
+
+```
+# Part 2
+
+import cv2 as cv
+import numpy as np
+from pathlib import Path
+
+#BGR
+img = cv.imread("./Part2_Pictures/HW1_IMG_CS898BA.png")
+
+b = img[:, :, 0]
+g = img[:, :, 1]
+r = img[:, :, 2]
+
+b = cv.equalizeHist(b)
+g = cv.equalizeHist(g)
+r = cv.equalizeHist(r)
+equalized_img = cv.merge([b, g, r])
+```
+
+- All this code does is import the necessary libraries then load the image. Since the img comes in as a numpy array I split it by slicing it. Then I apply Histogram Equalization on each channel individually by calling the function then I merge the channels together
