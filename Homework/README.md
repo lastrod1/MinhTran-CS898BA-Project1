@@ -224,4 +224,16 @@ print(f"K-Means: IoU = {iou:.4f}, Dice = {dice:.4f}")
 1. the mask of the figure is brought in and and turned into a binary mask and saved as the ground truth. The mask I made doesn't have a background so all pixels were just turned white
 2. I then define a metrics function which computes the iou and dice coeffcient 
 
-#### 5.1
+![comparison plots](./Hw2_Pictures/comparison_plot.png)
+
+#### 5.1 Qualitative analysis
+
+*Discuss the pros and cons of each approach regarding background noise (e.g., leaves, porch structures) and edge preservation of the central figure. Specifically note how color normalization across all three channels impacted the final segmentation compared to the raw image results from Homework One.*
+
+**Otsu**: otsu did well at capturing the shape of the figure however it captured the grass, porches, and trees as well which caused its scores to be low. 
+
+**Adaptive**: Captured the edges of the main figure very well however it also captured the edges everything which is a major con since we just wanted the main figure
+
+**K means**: This worked very well due to the HSV conversion which gave color groups which separated the main image well. The problem was that the HSV also bunched up some of the background like the trees and houses which caused its score to go down. But out of the 3, it had the highest scores
+
+**Normalization** helped the final result quite a bit since without it the image would be too dark so everything like the grass, porches, and trees might all blend in together when doing segmentation which is what we saw on Homework one.
