@@ -103,3 +103,125 @@ equalized_img = cv.merge([b, g, r])
 ```
 
 - All this code does is import the necessary libraries then load the image. Since the img comes in as a numpy array I split it by slicing it. Then I apply Histogram Equalization on each channel individually by calling the function then I merge the channels together
+
+### Part 3
+
+```
+# Part 3
+
+grayscale = cv.cvtColor(normalized_img, cv.COLOR_BGR2GRAY)
+
+ret, otsu = cv.threshold(grayscale, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
+show_image(otsu, "Otsu's Global Thresholding")
+
+gauss = cv.adaptiveThreshold(grayscale, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 31, 5)
+show_image(gauss, "Adaptive Thresholding")
+
+cv.imwrite("./Hw2_Pictures/OtsuGlobalThresholding.png", otsu)
+cv.imwrite("./Hw2_Pictures/AdaptiveThresholding.png", gauss)
+
+otsu_fg = cv.bitwise_and(normalized_img, normalized_img, mask=otsu)
+gauss_fg = cv.bitwise_and(normalized_img, normalized_img, mask=gauss)
+cv.imwrite("./Hw2_Pictures/OtsuForeground.png", otsu_fg)
+cv.imwrite("./Hw2_Pictures/AdaptiveForeground.png", gauss_fg)
+```
+
+- The normalized image from the previous part is grayscaled then otsu.
+  - otsu params:
+    - grayscale image
+    - placeholder thresholder since otsu ignores it
+    - 255 value given to mixels if they meet the thresh hold value
+    - THRESH_BINARY_INV was used here instead of THRESH_BINARY due to the image being dark and THRESH_OTSU was used to tell openCV to use OTSU's algorithm
+- The image is then shown and then adaptive threshing holding is done on the grayscaled image
+  - adaptive thresholding params:
+    - grayscale image is the image we're working on
+    - 255 is the max value and is same as otsu
+    - ADAPTIVE_THRESH_GAUSSIAN_C is the method
+    - THRESH_BINARY_INV is the same as otsu
+    - 31 is the block size that the algorithm looks at. So its looking at a 31x31 block for every pixel
+    - 5 is the amount that is subtracted after math is done
+- foregrounds of each image is then extracted with the AND and then foregrounds are saved
+
+### Part 4
+```
+# Part 4
+
+hsv_normalized = cv.cvtColor(normalized_img, cv.COLOR_BGR2HSV)
+
+pixel_vals = hsv_normalized.reshape((-1,3))
+pixel_vals = np.float32(pixel_vals)
+
+# 100 iterations, 85% acc
+criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 100, 0.85)
+k = 5
+retval, labels, centers = cv.kmeans(pixel_vals, k, None, criteria, 10, cv.KMEANS_RANDOM_CENTERS)
+
+centers = np.uint8(centers)
+segmented_data = centers[labels.flatten()]
+
+segmented_image = segmented_data.reshape((hsv_normalized.shape))
+
+show_image(segmented_image, "segmented image")
+cluster_num = 4
+
+mask = np.uint8(labels.flatten() == cluster_num) * 255
+mask = mask.reshape(hsv_normalized.shape[:2])
+
+foreground = cv.bitwise_and(normalized_img, normalized_img, mask=mask)
+
+show_image(foreground, "Isolated Cluster")
+show_image(mask, "Mask")
+
+cv.imwrite("./Hw2_Pictures/Kmeans_foreground.png", foreground)
+cv.imwrite("./Hw2_Pictures/Kmeans_mask.png", mask)
+```
+
+1. first the imaged is turned into the HSV color space and normalzied. Then since opencv required float32 for k-means the pixels values are all turned to float32
+2. the criteria for my kmeans is that if 100 iterations happens or if the custers move by less than 85%. k = 5 is for 5 clusters
+3. k means is then ran and everthing is passed, the 10 variable means that it'll run 10 times and return the best result
+4. centers are then separated and I picked the 5th cluster since I ran checked all the clusters and the last cluster gave the correct 4 ground.
+5. The mask is then turned into a binary mask and teh foreground is extract with the same method as with otsu and adapative thresholding
+6. images are then shown and saved
+
+### Part 5
+
+```
+# Part 5
+
+mask_gt = cv.imread("./Hw2_Pictures/MASK.png")
+mask_gt = cv.cvtColor(mask_gt, cv.COLOR_BGR2GRAY)
+_, mask_gt = cv.threshold(mask_gt, 0, 255, cv.THRESH_BINARY)
+show_image(mask_gt, "mask")
+cv.imwrite("./Hw2_Pictures/ground_truth.png", mask_gt)
+
+# Part 5.2 
+
+def metrics(mask, gt):
+    mask = mask.astype(bool)
+    gt = gt.astype(bool)
+    intersect = np.logical_and(mask, gt)
+    union = np.logical_or(mask, gt)
+    mag_int = intersect.sum()
+    mag_union = union.sum()
+    iou = mag_int / mag_union
+    
+    # dice 
+    dice = (2 * mag_int) / (mask.sum() + gt.sum())
+    return iou, dice
+
+masks = [otsu, gauss, mask]
+
+iou, dice = metrics(masks[0], mask_gt)
+print(f"Otsu: IoU = {iou:.4f}, Dice = {dice:.4f}")
+
+iou, dice = metrics(masks[1], mask_gt)
+print(f"gauss: IoU = {iou:.4f}, Dice = {dice:.4f}")
+
+iou, dice = metrics(masks[2], mask_gt)
+print(f"K-Means: IoU = {iou:.4f}, Dice = {dice:.4f}")
+```
+
+1. the mask of the figure is brought in and and turned into a binary mask and saved as the ground truth. The mask I made doesn't have a background so all pixels were just turned white
+2. I then define a metrics function which computes the iou and dice coeffcient 
+
+#### 5.1
