@@ -1,4 +1,18 @@
-# README for HW1
+# README for Homeworks
+
+## Directory Structure
+
+```
+├── Part2_Pictures/       # Picture outputs from Homework 1 Part 2 code
+│   ├── blurred_images/   # All blurred images from Homework 1 Part 2
+├── Hw2_Pictures/         # Picture outputs from Homework 2 code (HW2.ipynb)
+├── Part3_Pictures/       # Picture outputs from Homework 1 Part 3 code
+└── AI_Log.md             # Ai usage log file
+└── HW1.ipynb             # Code for Homeowork 1
+└── HW2.ipynb             # Code for Homeowork 2
+└── README.md.            # Contains structure, setup and explanations of code
+```
+
 
 ## Setup
 
