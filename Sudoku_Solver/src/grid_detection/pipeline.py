@@ -19,5 +19,3 @@ blank_canvas = np.zeros(image.shape, dtype=np.uint8)
 lines_image = draw_lines(blank_canvas, lines)
 
 cv.imwrite(f"{TEST_IMAGE_DIR}lines_image.png", lines_image)
-
-print (lines)

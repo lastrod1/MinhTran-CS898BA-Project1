@@ -11,8 +11,7 @@ def draw_lines(image, lines):
 def probabilistic_hough(image):
     # should take in the binary image
     MINLINELENGTH = image.shape[1] // 4
-    edges = cv.Canny(image, 120, 255)
-    lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=MINLINELENGTH, maxLineGap=20)
+    lines = cv.HoughLinesP(image, 1, np.pi/180, 68, minLineLength=MINLINELENGTH, maxLineGap=20)
 
     image = draw_lines(image, lines)
 
