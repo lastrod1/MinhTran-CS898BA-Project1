@@ -15,4 +15,8 @@
 └── Helloworld.py         # Hello world script
 └── README.md.            # Contains structure, setup and explanations of code
 └── requirements.txt      # Contains project and homework dependencies
+├── Sudoku_Solver/        # Main Project Folder
+│   ├── images/           # Contains all images used to work on project
+│   ├── src/              # Contains all source code for project
+
 ```
