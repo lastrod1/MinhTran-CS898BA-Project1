@@ -48,6 +48,8 @@ def get_intersection(line1, line2):
 
 def find_points(image, lines):
     horizontal_lines, vertical_lines = get_lines(lines)
+    horizontal_lines.sort(key=lambda line: line.y1)
+    vertical_lines.sort(key=lambda line: line.x1)
 
     points = []
     for horizontal_line in horizontal_lines:
@@ -55,5 +57,8 @@ def find_points(image, lines):
             point = get_intersection(horizontal_line, vertical_line)
             points.append(point)
             cv.circle(image, point, radius=5, color=(0, 0, 255), thickness=-1) 
+
+    print(f"Horizontal count: {len(horizontal_lines)}")
+    print(f"Vertical count: {len(vertical_lines)}")
     
     return image, points
