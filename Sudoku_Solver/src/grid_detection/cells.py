@@ -19,7 +19,8 @@ def isolate_digit(cell, min_area=15):
             best_label = label
 
     cleaned = np.zeros_like(cell)
-    if best_label is not None:
+    cell_area = h * w
+    if best_label is not None and (best_area / cell_area) >= .025:
         cleaned[labels == best_label] = 255
     return cleaned
 
