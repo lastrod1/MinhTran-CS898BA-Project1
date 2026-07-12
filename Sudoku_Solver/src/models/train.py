@@ -29,7 +29,7 @@ def train(epochs=150, batch_size=120):
     model.summary()
 
     early_stop = EarlyStopping(
-        monitor="val_accuracy", patience=3, restore_best_weights=True
+        monitor="val_accuracy", patience=5, restore_best_weights=True
     )
 
     history = model.fit(

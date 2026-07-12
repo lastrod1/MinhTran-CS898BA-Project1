@@ -1,6 +1,9 @@
 import numpy as np
 import cv2 as cv
 
+def resize_cell(cell):
+    return cv.resize(cell, (28,28), interpolation=cv.INTER_AREA)
+
 def isolate_digit(cell, min_area=15):
     kernel = np.ones((2, 2), np.uint8)
     opened = cv.morphologyEx(cell, cv.MORPH_OPEN, kernel)
@@ -36,6 +39,7 @@ def find_cells(image, points, directory):
             x_start, x_end, y_start, y_end = point2[0], point1[0], point2[1], point1[1]
             cell = image[y_start:y_end, x_start:x_end]
             cell = isolate_digit(cell)
+            cell = resize_cell(cell)
             cv.imwrite(f"{directory}cell({i},{j}).png", cell)
             cells.append(cell)
 
