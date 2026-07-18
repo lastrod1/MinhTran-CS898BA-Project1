@@ -257,6 +257,8 @@ print(f"K-Means: IoU = {iou:.4f}, Dice = {dice:.4f}")
 
 # Homework 3 Code Explanation and Discussion
 
+## Code Explanations
+
 ### Block 1
 
 This code defines the path to the dataset folder then uses the built in method from keras to load the dataset. Validation split is .30 because we want 70% for training. Image size is 128x128px per the assignment requirements and the batch size is 32 per assignment requirements.
@@ -573,23 +575,38 @@ for model_ in model_history:
 
 print(best_params)
 ```
+Output below (best model is bolded):
 
-This gave the following output:
-Here is your hyperparameter log formatted into a clean, copy-pasteable Markdown table.
+| Learning Rate | Batch Size | Dropout | Val Accuracy | Train Accuracy | Val Loss | Train Loss | 
+| --- | --- | --- | --- | --- | --- | --- | 
+|0.01   | 32|  0.3 | 0.5188 | 0.4621 |  135.5290 | 50.4238
+|0.01   | 32|  0.5 | 0.2250 | 0.2261 |  2.0361   | 3.4246
+|0.01   | 64|  0.3 | 0.2500 | 0.2037 |  2.2784   | 7.2143
+|0.01   | 64|  0.5 | 0.5547 | 0.4817 |  5.2555   | 8.5700
+|0.001  | 32|  0.3 | 0.8375 | 0.8694 |  1.4792   | 1.7340
+|0.001  | 32|  0.5 | 0.8250 | 0.8399 |  1.5575   | 1.9656
+|**0.001**  | **64**|  **0.3** | **0.8438** | **0.8778** |  **1.3905**   | **1.6743**
+|0.001  | 64|  0.5 | 0.8203 | 0.8511 |  1.5372   | 1.7518
+|0.0001 | 32|  0.3 | 0.7563 | 0.7725 |  1.5203   | 1.7008
+|0.0001 | 32|  0.5 | 0.7250 | 0.7683 |  1.5587   | 1.7237
+|0.0001 | 64|  0.3 | 0.7031 | 0.7542 |  1.5370   | 1.7024
+|0.0001 | 64|  0.5 | 0.6875 | 0.7247 |  1.5247   | 1.7018
 
-It looks like **Learning Rate = 0.001** is the clear sweet spot for your model, completely outperforming 0.01 (which looks like it's exploding/stuck) and 0.0001 (which is underlearning).
 
-| Learning Rate | Batch Size | Dropout | Train Accuracy | Val Accuracy |
-| --- | --- | --- | --- | --- |
-| 0.01 | 32 | 0.3 | 0.2205 | 0.2250 |
-| 0.01 | 32 | 0.5 | 0.2402 | 0.4250 |
-| 0.01 | 64 | 0.3 | 0.2065 | 0.3672 |
-| 0.01 | 64 | 0.5 | 0.2051 | 0.2422 |
-| 0.001 | 32 | 0.3 | 0.8680 | 0.8625 |
-| 0.001 | 32 | 0.5 | 0.8357 | 0.8375 |
-| 0.001 | 64 | 0.3 | 0.8722 | 0.8594 |
-| **0.001** | **64** | **0.5** | **0.8652** | **0.8672** |
-| 0.0001 | 32 | 0.3 | 0.7837 | 0.7188 |
-| 0.0001 | 32 | 0.5 | 0.7598 | 0.7563 |
-| 0.0001 | 64 | 0.3 | 0.7233 | 0.7109 |
-| 0.0001 | 64 | 0.5 | 0.7275 | 0.6797 |
+## Discussions
+
+Augmentation techniques of random flip, rotations, and brightness changes helped training due to making the model more generalizable. For example a random flip could cover the fish looking left or right. I also made a model with the exact same parameters as the model with the best parameters and found to see how it's loss looked compared to the best model. And what I found was that the best model without augmentation had a much steadier loss however was overfitted to the training data which is seen with the training accuracy being 1.0. This means the augmentation techniques helped made a more generalizable model and helped prevented overfitting by adding noise and diversity to the dataset.
+
+The hyper parameter adjustments showed that the learning rate had the most impact of all the parameters which is seen with all the 0.001 models having the highest validation accuracy. 0.01 Learning rate learned too fast which is seen as one of the models had a training loss of 50 which is far too high. Additionally the learning rate of 0.0001 was too slow so the model wasn't able to learn as much due to the small dataset size. The batch size helped with stability and dropout helped with overfitting but a dropout of 0.5 was far too much as almost all the models performed better with a lower dropout. Learning rate helped the most in accelerating convergence.
+
+
+```
+Validation Accuracy: 0.8125
+Validation Loss: 3.402238368988037
+Training Accuracy: 1.0
+Training Loss: 1.4379870891571045
+```
+![Grid](./Homework_3/no_aug_graphs.png)
+
+
+![Grid](./Homework_3/grid.png)
