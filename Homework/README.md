@@ -5,6 +5,7 @@
 ```
 ├── Part2_Pictures/       # Picture outputs from Homework 1 Part 2 code
 │   ├── blurred_images/   # All blurred images from Homework 1 Part 2
+├── Homework_3/           # Homework 3 files
 ├── Hw2_Pictures/         # Picture outputs from Homework 2 code (HW2.ipynb)
 ├── Part3_Pictures/       # Picture outputs from Homework 1 Part 3 code
 └── AI_Log.md             # Ai usage log file
@@ -251,3 +252,361 @@ print(f"K-Means: IoU = {iou:.4f}, Dice = {dice:.4f}")
 **K means**: This worked very well due to the HSV conversion which gave color groups which separated the main image well. The problem was that the HSV also bunched up some of the background like the trees and houses which caused its score to go down. But out of the 3, it had the highest scores
 
 **Normalization** helped the final result quite a bit since without it the image would be too dark so everything like the grass, porches, and trees might all blend in together when doing segmentation which is what we saw on Homework one.
+
+
+
+# Homework 3 Code Explanation and Discussion
+
+## Code Explanations
+
+### Block 1
+
+This code defines the path to the dataset folder then uses the built in method from keras to load the dataset. Validation split is .30 because we want 70% for training. Image size is 128x128px per the assignment requirements and the batch size is 32 per assignment requirements.
+
+```
+DATA_PATH = "Fish"
+
+dataset = keras.utils.image_dataset_from_directory(
+    directory=DATA_PATH,
+    validation_split=0.30,
+    subset="both",
+    seed=67,
+    image_size=(128, 128), # Part 2 req
+    batch_size=32
+)
+```
+
+### Block 2 
+
+This code first sets the training set to be the 70% split from the block above. Then the last 30% is split up in half so that we have 15% being validaiton set and 15% being test set which fullfils the 70/15/15 requirement. Class names are then extracted to be used for later.
+
+```
+train_set = dataset[0]
+remaining = dataset[1]
+
+# remaining has 30% so cutting it into 2
+remaining_set = tf.data.experimental.cardinality(remaining)
+
+val_set = remaining.take(remaining_set // 2)
+test_set = remaining.skip(remaining_set // 2)
+class_names = train_set.class_names
+```
+
+### Block 3
+
+This code is used to setup the model. 
+
+- data_aug is how I'm doing the random flips and rotations to increase generalizations
+- the main model rescales by dividing by 1/255 so that all pixels values will be between 0 and 1. This works because the highest pixel value is 255 so it clamps the range.
+- The model is then made to follow assignment requirements. 
+- Model is compiled with assignment requirements and "sparse_categorical_crossentropy" was used as its easier to run than the normal categorical cross entropy. Additionally we have classes with the fish so it made for the obvious first choice.
+- model is then trained for 20 epochs and history is stored. 20 epochs was picked as when I originally trained the model I had put at a higher number and it when looking at the graphs the training accuracy seemed to drop consistently after 20 epochs.
+
+```
+from keras import layers
+
+data_aug = keras.Sequential([
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(.2),
+    layers.RandomBrightness(.3)
+])
+
+model = keras.Sequential([
+    data_aug,
+    layers.Rescaling(1./255),
+
+    layers.Conv2D(32, (3,3), activation='relu'),
+    layers.MaxPooling2D(),
+
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D(),
+
+    layers.Conv2D(128, (3,3), activation='relu'),
+    layers.MaxPooling2D(),
+
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(6, activation='softmax')
+])
+
+model.summary()
+
+model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=0.001),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+
+history = model.fit(
+    train_set,
+    validation_data=val_set,
+    epochs=20
+)
+)
+```
+
+### Block 4
+
+This code just evaluates the model on the test set and saves the model as "baseline.keras"
+
+```
+model.save("baseline.keras")
+test_loss, test_acc = model.evaluate(test_set)
+```
+
+### Block 5
+
+This code just sets up the figure and subplots and plots the graphs. Graphs can be seen in the grid graph in the last step so I did not include here. 
+
+```
+plt.figure(figsize=(16,5))
+plt.subplot(1,2,1)
+plt.plot(history.history["accuracy"], label="Training")
+plt.plot(history.history["val_accuracy"], label="Validation")
+plt.title("Accuracy Graphs")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+
+plt.subplot(1,2,2)
+plt.plot(history.history["loss"], label="Training")
+plt.plot(history.history["val_loss"], label="Validation")
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Validation")
+plt.title("Validation Graphs")
+
+plt.tight_layout()
+plt.show()
+```
+
+### Block 6 
+
+This code is just a copy paste of the previous code but put into functions so that I can use it in grid search.
+
+```
+# helper funcs for the grid search
+
+def dataset(batch_size, path):
+    dataset = keras.utils.image_dataset_from_directory(
+        directory=path,
+        validation_split=0.30,
+        subset="both",
+        seed=67,
+        image_size=(128, 128),
+        batch_size=batch_size
+    )
+    train_set = dataset[0]
+    remaining = dataset[1]
+    remaining_set = tf.data.experimental.cardinality(remaining)
+    val_set = remaining.take(remaining_set // 2)
+    test_set = remaining.skip(remaining_set // 2)
+
+    return train_set, val_set, test_set
+
+def model(dropout, data_aug):
+    model = keras.Sequential([
+        data_aug,
+        layers.Rescaling(1./255),
+
+        layers.Conv2D(32, (3,3), activation='relu'),
+        layers.MaxPooling2D(),
+
+        layers.Conv2D(64, (3,3), activation='relu'),
+        layers.MaxPooling2D(),
+
+        layers.Conv2D(128, (3,3), activation='relu'),
+        layers.MaxPooling2D(),
+
+        layers.Flatten(),
+
+        layers.Dropout(dropout),
+        layers.Dense(128, activation='relu'),
+        layers.Dense(6, activation='softmax')
+    ])
+    return model
+```
+
+### Block 7
+
+1. Learning rates, batch sizes, and dropouts are all defined with set values
+2. best val acc, history, params, and model are are initilized
+3. model history list is initilized
+4. The process is pretty much the same as what I did before but repeated for all combinations of the parameters. The only difference is the following:
+   1. epochs is set to 35 so I can see how dropout affects overfitting
+   2. the model with the best validation accuracy is kept and saved
+   3. after every loop the model is appened with its params, validation accuracy, and training accuracy
+5. After all combinations have been tried the best one is saved
+
+```
+learning_rates = [0.01, 0.001, 0.0001]
+batch_sizes = [32, 64]
+dropouts = [0.3, 0.5]
+
+best_val_acc = 0
+best_history = None
+best_params = None
+best_model = None
+
+model_history = []
+
+for learning_rate in learning_rates:
+    for batch_size in batch_sizes:
+        for dropout in dropouts:
+            train_set, val_set, test_set = dataset(batch_size, DATA_PATH)
+            grid_model = model(dropout, data_aug)
+
+            grid_model.compile(
+                optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
+                loss="sparse_categorical_crossentropy",
+                metrics=["accuracy"]
+            )
+
+            history = grid_model.fit(
+                train_set,
+                validation_data=val_set,
+                epochs=35
+            )
+
+            val_acc = max(history.history["val_accuracy"])
+            train_acc = max(history.history["accuracy"])
+            params = (learning_rate, batch_size, dropout)
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                best_history = history
+                best_params = params
+                best_model = grid_model
+
+            model_history.append((params, val_acc, train_acc))
+
+            
+
+best_model.save("best_model.keras")
+```
+
+### Block 8 
+
+This code just gets the classification report using the prebuilt method from scikit learn. Additionally gets the confusion matrix and from the confusion matrix, calculates the per class accuracy.
+
+```
+# Part 5
+
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+
+best_batch = best_params[1]
+grid_train_ds, grid_val_ds, grid_test_ds = dataset(best_batch, DATA_PATH)
+
+pred = best_model.predict(grid_test_ds)
+
+y_pred = np.argmax(pred, axis=1)
+
+y_true = np.concatenate([y for x, y in grid_test_ds])
+
+print(classification_report(
+    y_true,
+    y_pred,
+    target_names=class_names
+))
+
+cm = confusion_matrix(y_true, y_pred)
+class_accuracy = cm.diagonal() / cm.sum(axis=1)
+for name, acc in zip(class_names, class_accuracy):
+    print(f"{name}: {acc:.3f}")
+
+plt.figure(figsize=(8,6))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=class_names,
+    yticklabels=class_names
+)
+
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+```
+
+### Block 9
+
+The code was too long and thought it would take up too much room. So only part of it is here, but it just graphs and plots the required graphs. 
+
+```
+plt.figure(figsize=(16,5))
+
+#baseline
+plt.subplot(2,3,1)
+plt.plot(history.history["accuracy"], label="Training")
+plt.plot(history.history["val_accuracy"], label="Validation")
+plt.title("Accuracy Graphs for Baseline Model")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+
+plt.subplot(2,3,2)
+plt.plot(history.history["loss"], label="Training")
+plt.plot(history.history["val_loss"], label="Validation")
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Validation")
+plt.title("Validation Graphs for Baseline Model")
+
+#confusion matrix
+plt.subplot(2,3,6)
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=class_names,
+    yticklabels=class_names
+)
+```
+
+### Block 10
+
+This code just loops over the model history to see how each set of parameters did. Then it prints which were the best parameters. (learning rate, batch size, dropout)
+
+```
+for model_ in model_history:
+    print(f"Learning Rate: {model_[0][0]} | Batch Size: {model_[0][1]}| Dropout: {model_[0][2]} | val accuracy: {model_[1]:.4f} | train accuracy: {model_[2]:.4f}")
+
+print(best_params)
+```
+Output below (best model is bolded):
+
+| Learning Rate | Batch Size | Dropout | Val Accuracy | Train Accuracy | Val Loss | Train Loss | 
+| --- | --- | --- | --- | --- | --- | --- | 
+|0.01   | 32|  0.3 | 0.5188 | 0.4621 |  135.5290 | 50.4238
+|0.01   | 32|  0.5 | 0.2250 | 0.2261 |  2.0361   | 3.4246
+|0.01   | 64|  0.3 | 0.2500 | 0.2037 |  2.2784   | 7.2143
+|0.01   | 64|  0.5 | 0.5547 | 0.4817 |  5.2555   | 8.5700
+|0.001  | 32|  0.3 | 0.8375 | 0.8694 |  1.4792   | 1.7340
+|0.001  | 32|  0.5 | 0.8250 | 0.8399 |  1.5575   | 1.9656
+|**0.001**  | **64**|  **0.3** | **0.8438** | **0.8778** |  **1.3905**   | **1.6743**
+|0.001  | 64|  0.5 | 0.8203 | 0.8511 |  1.5372   | 1.7518
+|0.0001 | 32|  0.3 | 0.7563 | 0.7725 |  1.5203   | 1.7008
+|0.0001 | 32|  0.5 | 0.7250 | 0.7683 |  1.5587   | 1.7237
+|0.0001 | 64|  0.3 | 0.7031 | 0.7542 |  1.5370   | 1.7024
+|0.0001 | 64|  0.5 | 0.6875 | 0.7247 |  1.5247   | 1.7018
+
+
+## Discussions
+
+Augmentation techniques of random flip, rotations, and brightness changes helped training due to making the model more generalizable. For example a random flip could cover the fish looking left or right. I also made a model with the exact same parameters as the model with the best parameters and found to see how it's loss looked compared to the best model. And what I found was that the best model without augmentation had a much steadier loss however was overfitted to the training data which is seen with the training accuracy being 1.0. This means the augmentation techniques helped made a more generalizable model and helped prevented overfitting by adding noise and diversity to the dataset.
+
+The hyper parameter adjustments showed that the learning rate had the most impact of all the parameters which is seen with all the 0.001 models having the highest validation accuracy. 0.01 Learning rate learned too fast which is seen as one of the models had a training loss of 50 which is far too high. Additionally the learning rate of 0.0001 was too slow so the model wasn't able to learn as much due to the small dataset size. The batch size helped with stability and dropout helped with overfitting but a dropout of 0.5 was far too much as almost all the models performed better with a lower dropout. Learning rate helped the most in accelerating convergence.
+
+
+```
+Validation Accuracy: 0.8125
+Validation Loss: 3.402238368988037
+Training Accuracy: 1.0
+Training Loss: 1.4379870891571045
+```
+![Grid](./Homework_3/no_aug_graphs.png)
+
+
+![Grid](./Homework_3/grid.png)
