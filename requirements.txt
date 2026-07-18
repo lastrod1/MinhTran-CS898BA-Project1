@@ -11,3 +11,5 @@ rich==15.0.0
 ipykernel==7.2.0
 ipython==9.14.1
 jupyter_client==8.9.0
+scikit-learn
+seaborn
