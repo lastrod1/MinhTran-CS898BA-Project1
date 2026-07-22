@@ -13,8 +13,8 @@ def probabilistic_hough(image):
     MINLINELENGTH = image.shape[1] // 4
     lines = cv.HoughLinesP(image, 1, np.pi/180, 68, minLineLength=MINLINELENGTH, maxLineGap=20)
 
-    image = draw_lines(image, lines)
+    lines_image = draw_lines(image, lines)
 
-    return image, lines
+    return lines_image, lines
 
 
