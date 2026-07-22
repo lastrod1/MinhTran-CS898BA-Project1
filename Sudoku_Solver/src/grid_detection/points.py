@@ -46,10 +46,44 @@ def get_intersection(line1, line2):
     y = m1 * x + b1
     return (int(x), int(y))
 
+def make_grid(horizontal_lines, vertical_lines):
+    if(len(horizontal_lines) != 10):
+        start = horizontal_lines[0].y1
+        end = horizontal_lines[-1].y1
+        dist = end - start
+        delta = int(dist / 9)
+
+        new_horizontal = []
+        for i in range(10):
+            dist_down = i * delta
+            new_line = Line(0, dist_down, 1, dist_down)
+            new_horizontal.append(new_line)
+    else:
+        new_horizontal = horizontal_lines
+
+    if(len(vertical_lines) != 10):
+        start = vertical_lines[0].x1
+        end = vertical_lines[-1].x1
+        dist = end - start
+        delta = int(dist / 9)
+
+        new_vertical = []
+        for i in range(10):
+            dist_across = i * delta
+            new_line = Line(dist_across, 0, dist_across, 1)
+            new_vertical.append(new_line)
+    else:
+        new_vertical = vertical_lines
+
+    return new_horizontal, new_vertical
+
 def find_points(image, lines):
     horizontal_lines, vertical_lines = get_lines(lines)
     horizontal_lines.sort(key=lambda line: line.y1)
     vertical_lines.sort(key=lambda line: line.x1)
+
+    if(len(horizontal_lines) != 10 or len(vertical_lines) != 10):
+        horizontal_lines, vertical_lines = make_grid(horizontal_lines, vertical_lines)
 
     point_image = image.copy()
     points = []
@@ -60,6 +94,6 @@ def find_points(image, lines):
             cv.circle(point_image, point, radius=5, color=(0, 0, 255), thickness=-1) 
 
     print(f"Horizontal count: {len(horizontal_lines)}")
-    print(f"Vertical count: {len(vertical_lines)}")
+    print(f"Vertical count: {len(vertical_lines)}")    
     
     return point_image, points
