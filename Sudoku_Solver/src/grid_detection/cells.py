@@ -5,7 +5,7 @@ def resize_cell(cell):
     return cv.resize(cell, (28,28), interpolation=cv.INTER_AREA)
 
 def isolate_digit(cell, min_area=15):
-    kernel = np.ones((2, 2), np.uint8)
+    kernel = np.ones((3, 2), np.uint8)
     opened = cv.morphologyEx(cell, cv.MORPH_OPEN, kernel)
 
     num_labels, labels, stats, _ = cv.connectedComponentsWithStats(opened, connectivity=8)
