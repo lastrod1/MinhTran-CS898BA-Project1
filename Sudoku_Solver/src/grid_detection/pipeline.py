@@ -11,7 +11,7 @@ from tensorflow.keras.models import load_model
 RAW_IMAGE_DIR = "../../images/raw_images/"
 TEST_IMAGE_DIR = "../../images/test_images/"
 CELLS_DIR = "../../images/cells_images/"
-RAW_IMAGE_FILE = "raw_3.png"
+RAW_IMAGE_FILE = "raw_1.png"
 IMAGE = RAW_IMAGE_DIR + RAW_IMAGE_FILE
 
 image = cv.imread(IMAGE)
