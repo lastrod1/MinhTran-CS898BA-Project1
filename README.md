@@ -84,12 +84,18 @@ lines take the form y=mx + b where b is why y-intercept
 3. then find our y value we plug back into y=mx+b which gives this code `y = m1 * x + b1`
 4. x position and y position are returned
 
+**make_grid()**
+
+`make_grid()` takes the dimensions of the input image and makes the horizontal lines and vertical lines equally spaced based on the grid dimensions. Returns vertical and horizontal lines that can be used later. 
+
+
 **find_points()**
 
 `find_points()` takes in a image and lines and returns the points which define the sudoku grid's intersection points. Process shown below:
 
 1. horizontal and vertical lines are initilized and made using the `get_lines()` function as defined earlier
 2. horizontal and vertical lines are sorted from first to last so that when later intersected, the intersections with be in correct order.
+3. If both the horizontal and vertical lines counts aren't both 10 then make_grid runs to correct the error and artificially make new lines. 
 3. a points list is initilized
 4. horizontal lines and vertical lines are looped over and do the following
    1. intersection point retrieved with the `get_intersection` function
@@ -140,3 +146,116 @@ Contains 3 functions `resize_cell()`, `isolate_digit()`, and `find_cells()`.
    8. cell is saved to directory for post analysis: `cv.imwrite(f"{directory}cell({i},{j}).png", cell)`
    9. cell is then appended to cells[] list
 3. cells list is returned
+
+### warp.py
+
+Contains 3 functions `order_points()`, `find_puzzle_contour()`, and `warp_puzzle()`
+
+**order_points()**
+
+`order_points()` takes in points and orders them in the following order top left -> top right -> bottom right, bottom left
+
+**find_puzzle_contour()**
+
+`find_puzzle_contour()` takes in the binary image from warp_puzzle() then finds all the contours in the image then does the following
+
+1. gets height and width of the binary image
+2. gets the image area by multiplying the height and width
+3. loops over the contour and filters out one that don't meet a certain area requirement or size requirement
+4. also gets rid of ones that don't look like a rectangle or square
+5. the biggest candidate that meets these conditions gets returned
+
+**warp_puzzle()**
+`warp_puzzle()` takes in an image and turns it into a binary image using the normal preprocessing function noted earlier in this docutment.
+
+The following is done:
+
+1. MORPH_CLOSE is applied twice which dialates then erodes and which helps fill in any gaps with the image
+2. the contour is found usign the find_puzzle_contour function
+3. points from the contour are ordered
+4. matrix to warp is made and then the image is warped.
+5. the warped image is returned
+
+### sudoku_grid.py
+
+contains functions to work with grid
+
+`print_grid` - takes in a grid and prints it out by looping over
+
+`draw_sudoku_grid` - takes in a grid and draws up a sudoku grid 
+
+`get_grid` - takes in the list of cells and does the following:
+
+1. loads in model
+2. loops over cells and changes them to match the input parameters then uses the model to predict each cell
+3. the probabilities are taken and then the digit with the highest probability is the predicted digit.
+4. if the cell is empty then 0 is appended and step 3 is skipped.
+5. predicted_digit is appened to the grid
+
+in the grid 0's represent blanks
+
+**NOTE**
+
+rest of the functions are used to solve the sudoku puzzle using backtracking and was based of the geeksforgeeks implementation
+
+### model.py
+
+contains function to build model
+
+```mermaid
+flowchart TD
+    A["Input 28x28x1"] --> B1
+
+    subgraph Block0["Conv block 0"]
+        B1["Conv2D 32, 3x3, same"] --> B2["BatchNorm"] --> B3["ReLU"]
+    end
+    B3 --> C1
+
+    subgraph Block1["Conv block 1"]
+        C1["Conv2D 48, 3x3, same"] --> C2["BatchNorm"] --> C3["ReLU"]
+    end
+    C3 --> D1
+
+    subgraph Block2["Conv block 2"]
+        D1["Conv2D 64, 3x3, same"] --> D2["BatchNorm"] --> D3["ReLU"] --> D4["MaxPool 2x2 → 14x14"]
+    end
+    D4 --> E1
+
+    subgraph Block3["Conv block 3"]
+        E1["Conv2D 80, 3x3, same"] --> E2["BatchNorm"] --> E3["ReLU"]
+    end
+    E3 --> F1
+
+    subgraph Block4["Conv block 4"]
+        F1["Conv2D 96, 3x3, same"] --> F2["BatchNorm"] --> F3["ReLU"]
+    end
+    F3 --> G1
+
+    subgraph Block5["Conv block 5"]
+        G1["Conv2D 112, 3x3, same"] --> G2["BatchNorm"] --> G3["ReLU"] --> G4["MaxPool 2x2 → 7x7"]
+    end
+    G4 --> H1
+
+    subgraph Block6["Conv block 6"]
+        H1["Conv2D 128, 3x3, same"] --> H2["BatchNorm"] --> H3["ReLU"]
+    end
+    H3 --> I1
+
+    subgraph Block7["Conv block 7"]
+        I1["Conv2D 144, 3x3, same"] --> I2["BatchNorm"] --> I3["ReLU"]
+    end
+    I3 --> J1
+
+    subgraph Block8["Conv block 8"]
+        J1["Conv2D 160, 3x3, same"] --> J2["BatchNorm"] --> J3["ReLU"] --> J4["MaxPool 2x2 → 3x3"]
+    end
+    J4 --> K1
+
+    subgraph Block9["Conv block 9"]
+        K1["Conv2D 176, 3x3, same"] --> K2["BatchNorm"] --> K3["ReLU"]
+    end
+    K3 --> L["GlobalAveragePooling2D"]
+    L --> M["Dense 10"]
+    M --> N["BatchNorm"]
+    N --> O["Softmax → 10 classes"]
+```
