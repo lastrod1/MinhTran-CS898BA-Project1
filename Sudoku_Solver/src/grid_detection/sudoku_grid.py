@@ -42,9 +42,6 @@ def get_grid(cells):
 
     return grid
 
-import cv2 as cv
-import numpy as np
-
 def draw_sudoku_grid(grid, cell_size=60):
     size = cell_size * 9
     img = np.ones((size, size, 3), dtype=np.uint8) * 255

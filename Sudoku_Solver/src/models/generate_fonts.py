@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 OUT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "font_digits.npz")
 
 RENDER_SIZE = 20
-# i have 242 on my system so since mnist is 70000, I did 120 so the datasets wouldn't be too skewed
+# I have 242 on my system so since mnist is 70000, I did 120 so the datasets wouldn't be too skewed
 AUGS_PER_FONT_DIGIT = 120
 
 
