@@ -2,6 +2,7 @@ import cv2 as cv
 from tensorflow.keras.models import load_model
 import numpy as np
 import os
+import copy
 
 def print_grid(grid):
     for i in range(9):
@@ -41,6 +42,34 @@ def get_grid(cells):
 
     return grid
 
+import cv2 as cv
+import numpy as np
+
+def draw_sudoku_grid(grid, cell_size=60):
+    size = cell_size * 9
+    img = np.ones((size, size, 3), dtype=np.uint8) * 255
+
+    for i in range(10):
+        thickness = 3 if i % 3 == 0 else 1
+        cv.line(img, (i * cell_size, 0), (i * cell_size, size), (0, 0, 0), thickness)
+        cv.line(img, (0, i * cell_size), (size, i * cell_size), (0, 0, 0), thickness)
+
+    font = cv.FONT_HERSHEY_SIMPLEX
+    for row in range(9):
+        for col in range(9):
+            val = grid[row][col]
+            if val == 0:
+                continue
+
+            text = str(val)
+            (tw, th), _ = cv.getTextSize(text, font, 1.2, 2)
+            x = col * cell_size + (cell_size - tw) // 2
+            y = row * cell_size + (cell_size + th) // 2
+
+            color = (0, 0, 0)
+            cv.putText(img, text, (x, y), font, 1.2, color, 2, cv.LINE_AA)
+
+    return img
 
 # funcs to solve with backtracking
 
@@ -86,4 +115,8 @@ def solveSudokuRec(mat, row, col):
     return False
 
 def solveSudoku(mat):
-    solveSudokuRec(mat, 0, 0)
+    mat_copy = copy.deepcopy(mat)
+    if (solveSudokuRec(mat, 0, 0)):
+        return mat_copy
+
+    return None

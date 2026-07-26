@@ -36,11 +36,15 @@ def load_font_digits(test_holdout):
     test_mask = np.isin(font_ids, list(test_fonts))
     return (images[~test_mask], labels[~test_mask]), (images[test_mask], labels[test_mask])
 
-def train(epochs=150, batch_size=120):
-    (x_train_m, y_train_m), (x_test_m, y_test_m) = load_data()
-    (x_train_f, y_train_f), (x_test_f, y_test_f) = load_font_digits(.15)
+def combined_training():
+    (x_train_m, y_train_m), _ = load_data()
+    (x_train_f, y_train_f), _ = load_font_digits(.15)
     x_train = np.concatenate((x_train_m, x_train_f))
     y_train = np.concatenate((y_train_m, y_train_f))
+    return x_train, y_train
+
+def train(epochs=150, batch_size=120):
+    x_train, y_train = combined_training()
 
     # quick shuff to make sure the fonts aren't at the end
     idx = np.arange(len(x_train))

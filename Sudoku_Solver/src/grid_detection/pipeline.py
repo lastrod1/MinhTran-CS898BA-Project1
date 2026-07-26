@@ -12,28 +12,28 @@ from tensorflow.keras.models import load_model
 RAW_IMAGE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "images/", "raw_images/")
 TEST_IMAGE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "images/", "test_images/")
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "images/", "cells_images/")
-RAW_IMAGE_FILE = "raw_2.png"
+RAW_IMAGE_FILE = "raw_2.png" # default 
 IMAGE = RAW_IMAGE_DIR + RAW_IMAGE_FILE
 
-image = cv.imread(IMAGE)
+def pipeline(image_path = IMAGE):
+    image = cv.imread(image_path)
 
-warped, matrix = warp_puzzle(image)
-cv.imwrite(f"{TEST_IMAGE_DIR}warped.png", warped)
-preprocessed = preprocessing(warped)
-lines_image, lines = probabilistic_hough(preprocessed)
-lines_image_nb = draw_lines(warped, lines, color=(255, 0, 0))
-points_image, points = find_points(lines_image_nb, lines)
+    warped, matrix = warp_puzzle(image)
+    cv.imwrite(f"{TEST_IMAGE_DIR}warped.png", warped)
 
-print(f"# of points: {len(points)}")
+    preprocessed = preprocessing(warped)
+    cv.imwrite(f"{TEST_IMAGE_DIR}preprocessed.png", preprocessed)
 
-cv.imwrite(f"{TEST_IMAGE_DIR}preprocessed.png", preprocessed)
-cv.imwrite(f"{TEST_IMAGE_DIR}lines_image.png", lines_image)
-cv.imwrite(f"{TEST_IMAGE_DIR}lines_image_nb.png", lines_image_nb)
-cv.imwrite(f"{TEST_IMAGE_DIR}points_image.png", points_image)
+    lines_image, lines = probabilistic_hough(preprocessed)
+    cv.imwrite(f"{TEST_IMAGE_DIR}lines_image.png", lines_image)
 
+    lines_image_nb = draw_lines(warped, lines, color=(0, 0, 255))
+    cv.imwrite(f"{TEST_IMAGE_DIR}lines_image_nb.png", lines_image_nb)
 
+    points_image, points = find_points(lines_image_nb, lines)
+    cv.imwrite(f"{TEST_IMAGE_DIR}points_image.png", points_image)
 
-cells = find_cells(preprocessed, points, CELLS_DIR)
+    cells = find_cells(preprocessed, points, CELLS_DIR)
 
-grid = get_grid(cells)
-print_grid(grid)
+    grid = get_grid(cells)
+    return grid
