@@ -1,9 +1,10 @@
 from tensorflow.keras import layers, models
+from tensorflow.keras.optimizers import Adam
  
  
 def build_model(input_shape=(28, 28, 1), num_classes=10):
 
-    channels = [32, 48, 64, 80, 96, 112, 128, 114, 160, 176]
+    channels = [32, 48, 64, 80, 96, 112, 128, 144, 160, 176]
     idx = {2, 5, 8}
     model = models.Sequential()
     model.add(layers.Input(shape=input_shape))
@@ -22,7 +23,7 @@ def build_model(input_shape=(28, 28, 1), num_classes=10):
     model.add(layers.Activation("softmax"))
  
     model.compile(
-        optimizer="adam",
+        optimizer=Adam(learning_rate=0.001064),
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"],
     )

@@ -28,7 +28,7 @@ def objective(trial):
         epochs=10,
         batch_size=batch_size,
         callbacks=[early_stop],
-        verbose=0,
+        verbose=1,
     )
 
     return max(history.history["val_accuracy"])
