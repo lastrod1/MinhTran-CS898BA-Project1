@@ -259,3 +259,97 @@ flowchart TD
     M --> N["BatchNorm"]
     N --> O["Softmax → 10 classes"]
 ```
+
+### train.py
+
+train.py contains all the functions used to train the CNN model
+
+**load_data()**
+`load_data()` this functions loads the MNIST data set and returns x_train, y_train, x_test, and y_test
+
+**load_font_digits()**
+`load_font_digits()` this function loads in the custom fonts dataset and randomly gets the x_train, y_train, x_test, and y_test for the font's dataset
+
+**combined_training()**
+`combined_training()` this function gets the x_train, y_train, x_test, and y_test from both load_data and load_font_digits and conbines them together into 1 dataset. 
+
+**train()**
+`train()` this function is responsible for training and does the following
+
+1. the training and testing data are retrieved with the following line `x_train, y_train, x_test_m, x_test_f, y_test_m, y_test_f = combined_training()`
+2. then the data is shuffed so that the font dataset isn't at the back which would cause a problem since the MNIST would bascially be the whole training set while the fonts would be the testing dataset.
+3. the model is built with the build_model() function as described earlier
+4. early stopping is setup with a patience of 5 and monitoring the val_accuracy for changes. 
+5. mode is then trained with the training sets, 0.1 split, 150 epochs, 120 batch size, and early stopping
+6. model is then evaluated on the mnist and fonts dataset individually and then is saved 
+
+### tune.py
+
+`tune.py` contains the function to get the optimized hyperparameters (loss and batch size)
+
+**objective()**
+`objective()` this function takes in a optuna study and does the following
+
+1. suggests a range .0001 to 0.01 for learning rate
+2. suggests batch sizes 32, 64, 120, 256
+3. trains the model by picking trial parameters and after all 10 trials picks the parameters with the highest val accuracy
+
+#### generate_fonts.py
+
+This file creates the fonts dataset that is used to help train the cnn
+
+**main()**
+`main()` does the following:
+
+1. gets system font paths. 
+2. images, labels, and font_ids lists are initilized
+3. loops through font paths does the following:
+   1. tries to render a digit to act as a "base"
+   2. if any of the digits are bascially black then the whole font is skipped
+   3. the bases are then looped over and the following happens:
+      1. base is centered
+      2. a jitter is applied
+      3. then the img with the jitter is added to the images nad label and the font idx is added
+   4. types of the lists are set
+   5. directory for the dataset is made if it isn't already made
+   6. dataset is saved
+
+**get_system_fonts()**
+`get_system_fonts` returns a list of font paths by doing the following:
+
+1. finds all the truetype fonts `candidates = fm.findSystemFonts(fontext="ttf")`
+2. initilizes a list of strings that act as warning words. some are things like wingding or emoji
+3. loops over all found fonts and does the following:
+   1. gets the name of the font
+   2. skip if its one of the bad words
+   3. then tries to load in the font
+   4. renders every digit in the font in a loop and does the following:
+      1. create blank image
+      2. measures the digit with a bounding box to ensure theres something there if the bounding box is 0 at any point then error is raised
+      3. digit is then centered and drawn
+      4. add digit to the amount of renders
+      5. check if enough digits were rendered and if enough were then add the path
+4. return all the good paths
+
+**render_digit()**
+`render_digit()` renders digit on blank 28x28 canvas and returns image by doign the following
+
+1. makes blank bg
+2. create drawing object
+3. select font
+4. get bounding box
+5. center and draw digit
+6. return digit
+
+**center_by_mass()**
+`center_by_mass()` takes in a 28x28 img then centers it and returns the centered image
+
+1. get all the white pixels
+2. if nothing is returned when getting white pixels return as there is nothing to center
+3. calculate the centers of mass and how much you need to shift
+4. then shift img
+5. return image
+
+**jitter()**
+`jitter()` applies random shift and returns image
+
